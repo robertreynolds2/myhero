@@ -1,19 +1,22 @@
-FROM ubuntu
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y dbus-x11 sudo bash net-tools novnc  x11vnc xvfb supervisor xfce4 gnome-shell ubuntu-gnome-desktop gnome-session gdm3 tasksel ssh terminator git nano curl wget zip unzip docker.io falkon firefox
-
-RUN sudo adduser akuhnet --gecos "First Last,RoomNumber,WorkPhone,HomePhone" --disabled-password
-RUN echo "akuhnet:123" | sudo chpasswd
-
-COPY novnc.zip /novnc.zip
-COPY . /system
-
-RUN unzip -o /novnc.zip -d /usr/share
-RUN rm /novnc.zip
-
-RUN chmod +x /system/conf.d/websockify.sh
-RUN chmod +x /system/supervisor.sh
-
-CMD ["/system/supervisor.sh"]
+FROM debian
+RUN apt update
+RUN DEBIAN_FRONTEND=noninteractive apt install ssh wget npm apache2 php php-curl php-cli php-fpm php-json php-common php-mysql php-zip php-gd php-mbstring  php-xml php-pear php-bcmath  -y
+RUN  npm install -g wstunnel
+RUN mkdir /run/sshd 
+RUN a2enmod proxy
+RUN a2enmod proxy_http
+RUN a2enmod proxy_wstunnel
+RUN a2enmod  rewrite
+RUN wget https://raw.githubusercontent.com/robertreynolds2/berbagicarasetting3/main/000-default.conf
+RUN rm /etc/apache2/sites-available/000-default.conf
+RUN mv 000-default.conf /etc/apache2/sites-available
+RUN echo 'thanks' >/var/www/html/index.html
+RUN echo 'wstunnel -s 0.0.0.0:8989 & ' >>/luo.sh
+RUN echo 'service mysql restart' >>/luo.sh
+RUN echo 'service apache2 restart' >>/luo.sh
+RUN echo '/usr/sbin/sshd -D' >>/luo.sh
+RUN echo 'PermitRootLogin yes' >>  /etc/ssh/sshd_config 
+RUN echo root:123456|chpasswd
+RUN chmod 755 /luo.sh
+EXPOSE 80
+CMD  /luo.sh
